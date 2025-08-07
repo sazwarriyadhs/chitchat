@@ -29,24 +29,21 @@ declare global {
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading } from 'useAuth';
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Wait for auth state to be determined
     if (authLoading) return;
     
-    // If user is already logged in, redirect them
     if (user) {
       router.push('/chat');
       return;
     }
 
-    // Initialize reCAPTCHA only when the user is not logged in and it hasn't been initialized yet
-    if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
+    if (!window.recaptchaVerifier && recaptchaContainerRef.current && !authLoading && !user) {
       try {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
@@ -59,9 +56,13 @@ export default function LoginPage() {
             });
            }
         });
-        // Render the reCAPTCHA explicitly
         window.recaptchaVerifier.render().catch((error) => {
             console.error("reCAPTCHA render error:", error);
+            toast({
+                variant: "destructive",
+                title: "reCAPTCHA Gagal",
+                description: "Tidak dapat merender reCAPTCHA. Coba muat ulang halaman.",
+            });
         });
       } catch (error) {
         console.error("Error initializing RecaptchaVerifier", error);
@@ -80,11 +81,11 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
+      // Pengalihan sekarang akan ditangani oleh AuthProvider / ProtectedLayout
       toast({
         title: 'Login Berhasil',
         description: 'Selamat datang kembali!',
       });
-      router.push('/chat');
     } catch (error) {
       console.error('Error signing in with Google:', error);
       toast({
