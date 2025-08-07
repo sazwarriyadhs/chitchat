@@ -8,14 +8,14 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel"
 
-const onlineUsers = [
-  { name: "Alice", avatar: "https://placehold.co/40x40/F4B400/000000.png" },
-  { name: "Bob", avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png" },
-  { name: "Charlie", avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png" },
-  { name: "Diana", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png" },
-  { name: "Frank", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png" },
-  { name: "David", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png" },
-  { name: "Eve", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png" },
+const stories = [
+  { id: 1, user: "Alice", image: "https://placehold.co/320x180.png", avatar: "https://placehold.co/40x40/F4B400/000000.png", dataAiHint: "nature landscape" },
+  { id: 2, user: "Bob", image: "https://placehold.co/320x180.png", avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png", dataAiHint: "city night" },
+  { id: 3, user: "Charlie", image: "https://placehold.co/320x180.png", avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png", dataAiHint: "beach sunset" },
+  { id: 4, user: "Diana", image: "https://placehold.co/320x180.png", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", dataAiHint: "mountain hiking" },
+  { id: 5, user: "Frank", image: "https://placehold.co/320x180.png", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", dataAiHint: "food delicious" },
+  { id: 6, user: "David", image: "https://placehold.co/320x180.png", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", dataAiHint: "concert music" },
+  { id: 7, user: "Eve", image: "https://placehold.co/320x180.png", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", dataAiHint: "pet cute" },
 ];
 
 
@@ -32,20 +32,26 @@ export function Header() {
                 opts={{
                 align: "start",
                 }}
-                className="w-full max-w-sm md:max-w-md lg:max-w-lg"
+                className="w-full max-w-md lg:max-w-xl"
             >
                 <CarouselContent>
-                {onlineUsers.map((user, index) => (
-                    <CarouselItem key={index} className="basis-1/5 md:basis-1/6 lg:basis-1/8">
-                    <div className="p-1">
-                        <div className="flex flex-col items-center justify-center gap-1">
-                            <Avatar className="w-14 h-14 border-2 border-primary">
-                            <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="avatar story" />
-                            <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs font-medium truncate">{user.name}</span>
-                        </div>
-                    </div>
+                {stories.map((story) => (
+                    <CarouselItem key={story.id} className="basis-1/2 sm:basis-1/3 md:basis-1/4">
+                      <div className="p-1">
+                        <Card className="overflow-hidden rounded-lg group">
+                          <div className="relative aspect-video">
+                            <Image src={story.image} alt={`Story by ${story.user}`} layout="fill" objectFit="cover" className="transition-transform duration-300 group-hover:scale-105" data-ai-hint={story.dataAiHint} />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                            <div className="absolute bottom-2 left-2 flex items-center gap-2">
+                                <Avatar className="w-8 h-8 border-2 border-primary">
+                                    <AvatarImage src={story.avatar} alt={story.user} />
+                                    <AvatarFallback>{story.user.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <span className="text-white text-sm font-bold drop-shadow-md">{story.user}</span>
+                            </div>
+                          </div>
+                        </Card>
+                      </div>
                     </CarouselItem>
                 ))}
                 </CarouselContent>
