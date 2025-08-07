@@ -29,21 +29,19 @@ declare global {
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, loading: authLoading } from 'useAuth';
+  const { user, loading: authLoading } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (authLoading) return;
-    
-    if (user) {
+    if (!authLoading && user) {
       router.push('/chat');
       return;
     }
 
-    if (!window.recaptchaVerifier && recaptchaContainerRef.current && !authLoading && !user) {
+    if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
       try {
         window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
@@ -81,7 +79,7 @@ export default function LoginPage() {
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
-      // Pengalihan sekarang akan ditangani oleh AuthProvider / ProtectedLayout
+      // AuthProvider/ProtectedLayout will handle the redirection
       toast({
         title: 'Login Berhasil',
         description: 'Selamat datang kembali!',
@@ -143,6 +141,8 @@ export default function LoginPage() {
 
 
   if (authLoading || user) {
+    // This loader is for when we are certain the user is authenticated and we are just waiting for the redirect.
+    // Or when auth state is not yet determined.
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin" />
