@@ -39,7 +39,7 @@ export function UserList() {
   return (
     <Card className="hidden md:flex flex-col w-72 m-2 mr-0 rounded-lg shadow-sm">
       <CardHeader>
-        <CardTitle>Status Pengguna</CardTitle>
+        <CardTitle>User Status</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 overflow-y-auto">
         
