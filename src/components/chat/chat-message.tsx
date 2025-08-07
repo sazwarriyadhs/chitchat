@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { FileIcon } from "lucide-react";
 
@@ -8,6 +9,7 @@ export interface Message {
   avatar: string;
   text: string;
   timestamp: Date;
+  email?: string;
   file?: {
     name: string;
     size: number;
@@ -16,7 +18,10 @@ export interface Message {
 
 interface ChatMessageProps {
   message: Message;
+  currentUserEmail?: string | null;
 }
+
+const adminEmail = "shaliaspajakarta@gmail.com";
 
 function formatBytes(bytes: number, decimals = 2) {
   if (bytes === 0) return '0 Bytes';
@@ -27,8 +32,9 @@ function formatBytes(bytes: number, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
-  const isCurrentUser = message.author === "You";
+export function ChatMessage({ message, currentUserEmail }: ChatMessageProps) {
+  const isCurrentUser = message.author === "You" || message.email === currentUserEmail;
+  const isAuthorAdmin = message.email === adminEmail;
 
   return (
     <div
@@ -67,7 +73,12 @@ export function ChatMessage({ message }: ChatMessageProps) {
           {message.text && <p className="text-sm font-medium">{message.text}</p>}
         </div>
         <div className="mt-1 text-xs text-muted-foreground flex items-center gap-2">
-          {!isCurrentUser && <span className="font-bold">{message.author}</span>}
+          {!isCurrentUser && (
+            <div className="flex items-center gap-1">
+              <span className="font-bold">{message.author}</span>
+              {isAuthorAdmin && <Badge variant="secondary">Admin</Badge>}
+            </div>
+          )}
           <span>
             {message.timestamp.toLocaleTimeString([], {
               hour: "2-digit",

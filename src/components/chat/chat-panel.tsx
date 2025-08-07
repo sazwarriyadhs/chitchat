@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useAuth } from "../auth-provider";
 
+const adminEmail = "shaliaspajakarta@gmail.com";
 
 const initialMessages: Message[] = [
   {
@@ -26,6 +27,7 @@ const initialMessages: Message[] = [
     avatar: "https://placehold.co/40x40/F4B400/000000.png",
     text: "Hey everyone! How's the new project planning coming along?",
     timestamp: new Date(Date.now() - 1000 * 60 * 5),
+    email: "alice@example.com"
   },
   {
     id: "2",
@@ -33,6 +35,7 @@ const initialMessages: Message[] = [
     avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png",
     text: "Going well! I've drafted the initial specs. I'll share them by EOD.",
     timestamp: new Date(Date.now() - 1000 * 60 * 4),
+    email: "bob@example.com"
   },
   {
     id: "3",
@@ -47,13 +50,15 @@ const initialMessages: Message[] = [
     avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png",
     text: "I've been working on the design mockups. The new component library is a dream to work with. I think we can build a really intuitive interface.",
     timestamp: new Date(Date.now() - 1000 * 60 * 2),
+    email: "charlie@example.com"
   },
   {
     id: "5",
-    author: "Charlie",
-    avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png",
+    author: "Admin ShalIa",
+    avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png",
     text: "Speaking of which, we need to decide on the color palette for the dashboard widgets. Any strong opinions? I was thinking we could use the new accent color more prominently.",
     timestamp: new Date(Date.now() - 1000 * 60 * 1),
+    email: adminEmail
   },
 ];
 
@@ -99,6 +104,7 @@ export function ChatPanel() {
         avatar: user.photoURL || "https://placehold.co/40x40.png",
         text: text,
         timestamp: new Date(),
+        email: user.email ?? undefined,
         file: file ? { name: file.name, size: file.size } : undefined
       };
       setMessages([...messages, newMessage]);
@@ -158,7 +164,7 @@ export function ChatPanel() {
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
           <div className="flex flex-col gap-4">
             {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
+              <ChatMessage key={msg.id} message={msg} currentUserEmail={user?.email} />
             ))}
           </div>
         </ScrollArea>
