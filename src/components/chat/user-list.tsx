@@ -1,13 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel"
 import { Badge } from "@/components/ui/badge"
 
 const onlineUsers = [
@@ -49,37 +42,7 @@ export function UserList() {
         <CardTitle>Status Pengguna</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 overflow-y-auto">
-        <div className="px-4">
-          <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-            }}
-            className="w-full max-w-xs"
-          >
-            <CarouselContent>
-              {onlineUsers.map((user, index) => (
-                <CarouselItem key={index} className="basis-1/3">
-                  <div className="p-1">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                       <div className="relative">
-                        <Avatar className="w-16 h-16 border-2 border-primary">
-                          <AvatarImage src={user.avatar} alt={user.name} data-ai-hint="avatar" />
-                          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                         <div className="absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-card bg-green-500" />
-                       </div>
-                      <span className="text-sm font-medium truncate">{user.name}</span>
-                    </div>
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="-left-4" />
-            <CarouselNext className="-right-4" />
-          </Carousel>
-        </div>
-
+        
         <Separator />
 
         <div>
