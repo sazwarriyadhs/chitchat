@@ -16,23 +16,16 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true }
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const pathname = usePathname();
-  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
       setLoading(false);
-
-      if (user && (pathname === '/login' || pathname === '/verify-otp' || pathname === '/')) {
-        router.push('/');
-      } else if (!user && pathname !== '/login' && pathname !== '/verify-otp') {
-        router.push('/login');
-      }
     });
 
+    // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [pathname, router]);
+  }, []);
 
   const value = { user, loading };
 

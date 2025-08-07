@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   signInWithPopup,
@@ -15,8 +15,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, KeyRound, Mail } from 'lucide-react';
+import { Loader2, KeyRound } from 'lucide-react';
 import Image from 'next/image';
+import { useAuth } from '@/components/auth-provider';
 
 declare global {
   interface Window {
@@ -28,23 +29,25 @@ declare global {
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!window.recaptchaVerifier) {
-      // Important: RecaptchaVerifier must be rendered in a visible container.
-      // The 'recaptcha-container' div is used for this purpose.
+    if (authLoading) return; // Wait for auth state to be determined
+    if (user) {
+      router.push('/');
+      return;
+    }
+
+    if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
       try {
-        const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        const recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
-          'callback': (response: any) => {
-            // reCAPTCHA solved, allow signInWithPhoneNumber.
-          },
-          'expired-callback': () => {
-            // Response expired. Ask user to solve reCAPTCHA again.
-          }
+          'callback': () => { /* reCAPTCHA solved */ },
+          'expired-callback': () => { /* Response expired */ }
         });
         window.recaptchaVerifier = recaptchaVerifier;
       } catch (error) {
@@ -56,7 +59,7 @@ export default function LoginPage() {
         })
       }
     }
-  }, [toast]);
+  }, [user, authLoading, router, toast]);
 
 
   const handleGoogleSignIn = async () => {
@@ -74,7 +77,7 @@ export default function LoginPage() {
       toast({
         variant: 'destructive',
         title: 'Login Gagal',
-        description: 'Terjadi kesalahan saat mencoba masuk dengan Google.',
+        description: 'Terjadi kesalahan saat mencoba masuk dengan Google. Pastikan domain sudah diotorisasi.',
       });
     } finally {
       setIsGoogleLoading(false);
@@ -171,7 +174,7 @@ export default function LoginPage() {
         </CardContent>
       </Card>
       {/* This container is used by RecaptchaVerifier and must be visible. */}
-      <div id="recaptcha-container" className="fixed bottom-0"></div>
+      <div ref={recaptchaContainerRef} />
     </div>
   );
 }
