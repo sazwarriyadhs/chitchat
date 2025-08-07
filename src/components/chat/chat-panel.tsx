@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from "react";
-import { Send, Paperclip, Phone, Video } from "lucide-react";
+import { Send, Paperclip, Phone, Video, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,59 +17,64 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuth } from "../auth-provider";
+import { db } from "@/lib/firebase";
+import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, type Timestamp } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const adminEmail = "shaliaspajakarta@gmail.com";
 
-const initialMessages: Message[] = [
-  {
-    id: "1",
-    author: "Alice",
-    avatar: "https://placehold.co/40x40/F4B400/000000.png",
-    text: "Hey everyone! How's the new project planning coming along?",
-    timestamp: new Date(Date.now() - 1000 * 60 * 5),
-    email: "alice@example.com"
-  },
-  {
-    id: "2",
-    author: "Bob",
-    avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png",
-    text: "Going well! I've drafted the initial specs. I'll share them by EOD.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 4),
-    email: "bob@example.com"
-  },
-  {
-    id: "3",
-    author: "You",
-    avatar: "https://placehold.co/40x40.png",
-    text: "Great, thanks Bob! Let me know if you need another pair of eyes on it.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 3),
-  },
-  {
-    id: "4",
-    author: "Charlie",
-    avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png",
-    text: "I've been working on the design mockups. The new component library is a dream to work with. I think we can build a really intuitive interface.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 2),
-    email: "charlie@example.com"
-  },
-  {
-    id: "5",
-    author: "Admin ShalIa",
-    avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png",
-    text: "Speaking of which, we need to decide on the color palette for the dashboard widgets. Any strong opinions? I was thinking we could use the new accent color more prominently.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 1),
-    email: adminEmail
-  },
-];
+// Firestore data structure for a message
+interface FirestoreMessage {
+  author: string;
+  avatar: string;
+  text: string;
+  timestamp: Timestamp;
+  email?: string;
+  file?: {
+    name: string;
+    size: number;
+    url: string;
+  };
+}
 
 export function ChatPanel() {
   const { user } = useAuth();
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    const q = query(collection(db, "messages"), orderBy("timestamp", "asc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const msgs: Message[] = [];
+      querySnapshot.forEach((doc) => {
+        // Here we cast the doc.data() to FirestoreMessage to ensure type safety from Firestore
+        const data = doc.data() as FirestoreMessage;
+        msgs.push({
+            id: doc.id,
+            ...data
+        });
+      });
+      setMessages(msgs);
+      setIsLoading(false);
+    }, (error) => {
+        console.error("Error fetching messages: ", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not fetch messages from the server."
+        });
+        setIsLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [toast]);
+
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -92,26 +97,54 @@ export function ChatPanel() {
         return;
       }
       setSelectedFile(file);
-      setInput(prev => `[File: ${file.name}] ${prev}`);
+      // We don't add the file name to the input anymore as it will be handled on send
     }
   };
+  
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
 
-  const handleSendMessage = (text: string, file?: File | null) => {
+  const handleSendMessage = async (text: string, file: File | null) => {
     if ((text.trim() || file) && user) {
-      const newMessage: Message = {
-        id: (messages.length + 1).toString(),
-        author: "You",
-        avatar: user.photoURL || "https://placehold.co/40x40.png",
-        text: text,
-        timestamp: new Date(),
-        email: user.email ?? undefined,
-        file: file ? { name: file.name, size: file.size } : undefined
-      };
-      setMessages([...messages, newMessage]);
-      setInput("");
-      setSelectedFile(null);
-      if(fileInputRef.current) {
-        fileInputRef.current.value = "";
+      setIsSending(true);
+      try {
+        let fileData: { name: string; size: number; url: string; } | undefined = undefined;
+
+        if (file) {
+            const storage = getStorage();
+            const storageRef = ref(storage, `chat_files/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            fileData = { name: file.name, size: file.size, url: downloadURL };
+        }
+
+        const messageData: Omit<FirestoreMessage, 'id'> = {
+          author: user.displayName || user.email || "Anonymous",
+          avatar: user.photoURL || "https://placehold.co/40x40.png",
+          text: text.trim(),
+          timestamp: serverTimestamp() as Timestamp,
+          email: user.email ?? undefined,
+          file: fileData
+        };
+
+        await addDoc(collection(db, "messages"), messageData);
+
+        setInput("");
+        handleRemoveFile();
+
+      } catch (error) {
+        console.error("Error sending message:", error);
+        toast({
+          variant: "destructive",
+          title: "Send Error",
+          description: "Failed to send message. Please try again.",
+        });
+      } finally {
+        setIsSending(false);
       }
     }
   }
@@ -162,19 +195,36 @@ export function ChatPanel() {
         </div>
 
         <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-          <div className="flex flex-col gap-4">
-            {messages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} currentUserEmail={user?.email} />
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} message={msg} currentUserEmail={user?.email} />
+              ))}
+            </div>
+          )}
         </ScrollArea>
-
-        <div className="p-4 border-t">
+        
+        <div className="p-4 border-t space-y-2">
+            {selectedFile && (
+                <div className="flex items-center justify-between bg-muted p-2 rounded-md text-sm">
+                    <div className="flex items-center gap-2 truncate">
+                        <Paperclip className="w-4 h-4" />
+                        <span className="truncate">{selectedFile.name}</span>
+                    </div>
+                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleRemoveFile}>
+                        <X className="w-4 h-4" />
+                    </Button>
+                </div>
+            )}
           <form onSubmit={handleSubmit} className="flex items-center gap-2">
             <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                      <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()} disabled={isSending}>
                           <Paperclip className="w-5 h-5" />
                       </Button>
                   </TooltipTrigger>
@@ -190,9 +240,10 @@ export function ChatPanel() {
               placeholder="Type a message..."
               className="flex-1"
               autoComplete="off"
+              disabled={isSending}
             />
-            <Button type="submit" size="icon" aria-label="Send message">
-              <Send className="w-4 h-4" />
+            <Button type="submit" size="icon" aria-label="Send message" disabled={isSending || (!input.trim() && !selectedFile)}>
+              {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </Button>
           </form>
         </div>

@@ -1,6 +1,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { Timestamp } from "firebase/firestore";
 import { FileIcon } from "lucide-react";
 
 export interface Message {
@@ -8,11 +9,12 @@ export interface Message {
   author: string;
   avatar: string;
   text: string;
-  timestamp: Date;
+  timestamp: Timestamp | Date; // Allow both types initially
   email?: string;
   file?: {
     name: string;
     size: number;
+    url: string;
   };
 }
 
@@ -32,9 +34,18 @@ function formatBytes(bytes: number, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
+function formatTimestamp(timestamp: Timestamp | Date): Date {
+    if (timestamp instanceof Date) {
+        return timestamp;
+    }
+    // It's a Firestore Timestamp
+    return timestamp.toDate();
+}
+
 export function ChatMessage({ message, currentUserEmail }: ChatMessageProps) {
   const isCurrentUser = message.author === "You" || message.email === currentUserEmail;
   const isAuthorAdmin = message.email === adminEmail;
+  const displayTimestamp = formatTimestamp(message.timestamp);
 
   return (
     <div
@@ -62,13 +73,13 @@ export function ChatMessage({ message, currentUserEmail }: ChatMessageProps) {
           )}
         >
           {message.file && (
-             <div className="flex items-center gap-2 p-2 mb-2 rounded-md bg-black/10">
+             <a href={message.file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 mb-2 rounded-md bg-black/10 hover:bg-black/20 transition-colors">
                 <FileIcon className="w-6 h-6"/>
                 <div className="text-sm">
                     <div>{message.file.name}</div>
                     <div className="text-xs opacity-80">{formatBytes(message.file.size)}</div>
                 </div>
-            </div>
+            </a>
           )}
           {message.text && <p className="text-sm font-medium">{message.text}</p>}
         </div>
@@ -80,7 +91,7 @@ export function ChatMessage({ message, currentUserEmail }: ChatMessageProps) {
             </div>
           )}
           <span>
-            {message.timestamp.toLocaleTimeString([], {
+            {displayTimestamp.toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })}
