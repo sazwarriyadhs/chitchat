@@ -1,13 +1,21 @@
 "use client";
 
-import { useState, useRef, useEffect, type FormEvent } from "react";
-import { Send, Sparkles } from "lucide-react";
+import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from "react";
+import { Send, Sparkles, Paperclip, Phone, Video, File as FileIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { ChatMessage, type Message } from "./chat-message";
 import { SummarizeButton } from "./summarize-button";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
 
 const initialMessages: Message[] = [
   {
@@ -50,7 +58,10 @@ const initialMessages: Message[] = [
 export function ChatPanel() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -60,25 +71,84 @@ export function ChatPanel() {
       });
     }
   }, [messages]);
+  
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: "Please select a file smaller than 10MB.",
+        });
+        return;
+      }
+      setSelectedFile(file);
+      // Prepend file name to input or handle it differently
+      setInput(prev => `[File: ${file.name}] ${prev}`);
+    }
+  };
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    if (input.trim()) {
+  const handleSendMessage = (text: string, file?: File | null) => {
+    if (text.trim() || file) {
       const newMessage: Message = {
         id: (messages.length + 1).toString(),
         author: "You",
         avatar: "https://placehold.co/40x40.png",
-        text: input,
+        text: text,
         timestamp: new Date(),
+        file: file ? { name: file.name, size: file.size } : undefined
       };
       setMessages([...messages, newMessage]);
       setInput("");
+      setSelectedFile(null);
+      if(fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
+  }
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    handleSendMessage(input, selectedFile);
   };
+
+  const handleCall = (type: 'audio' | 'video') => {
+    toast({
+      title: `Starting ${type} call...`,
+      description: "This feature is not yet implemented.",
+    });
+  }
 
   return (
     <Card className="flex flex-col flex-1 m-2 rounded-lg shadow-sm">
-      <div className="p-4 border-b flex justify-end">
+      <div className="p-4 border-b flex justify-between items-center bg-card">
+        <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={() => handleCall('video')}>
+                    <Video className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Start Video Call</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="icon" onClick={() => handleCall('audio')}>
+                    <Phone className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Start Audio Call</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+        </div>
         <SummarizeButton messages={messages} />
       </div>
 
@@ -92,6 +162,19 @@ export function ChatPanel() {
 
       <div className="p-4 border-t">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
+           <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
+                        <Paperclip className="w-5 h-5" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Attach File (Max 10MB)</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
