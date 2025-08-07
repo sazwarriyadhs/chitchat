@@ -1,28 +1,27 @@
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { CreateGroupDialog } from "./create-group-dialog"
-import { Badge } from "@/components/ui/badge"
+"use client";
+
+import { useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { CreateGroupDialog } from "./create-group-dialog";
+import { Badge } from "@/components/ui/badge";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { Skeleton } from "../ui/skeleton";
 
 const adminEmail = "shaliaspajakarta@gmail.com";
 
-const onlineUsers = [
-  { id: "1", name: "Alice", avatar: "https://placehold.co/40x40/F4B400/000000.png", status: "Online", email: "alice@example.com" },
-  { id: "2", name: "Bob", avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png", status: "In a meeting", email: "bob@example.com" },
-  { id: "3", name: "Charlie", avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png", status: "Away", email: "charlie@example.com" },
-  { id: "4", name: "Diana", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", status: "Coding", email: "diana@example.com" },
-  { id: "5", name: "Admin ShalIa", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", status: "On a call", email: adminEmail },
-];
+export interface AppUser {
+  id: string;
+  name: string;
+  avatar: string;
+  status: "Online" | "Offline" | string;
+  email: string;
+}
 
-const offlineUsers = [
-  { id: "6", name: "David", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", status: "Offline", email: "david@example.com" },
-  { id: "7", name: "Eve", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", status: "Offline", email: "eve@example.com" },
-];
-
-const allUsers = [...onlineUsers, ...offlineUsers];
-
-const User = ({ name, avatar, isOnline, status, email }: { name: string; avatar: string; isOnline: boolean; status: string, email: string }) => (
+const User = ({ name, avatar, isOnline, status, email }: { name:string, avatar: string, isOnline: boolean, status: string, email: string }) => (
   <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
     <div className="relative">
       <Avatar>
@@ -44,37 +43,97 @@ const User = ({ name, avatar, isOnline, status, email }: { name: string; avatar:
   </div>
 );
 
+const UserListSkeleton = () => (
+    <div className="flex flex-col gap-4 px-4">
+        <div>
+            <Skeleton className="h-4 w-20 mb-2" />
+            <div className="flex flex-col gap-2">
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="flex flex-col gap-1">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-3 w-16" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+        <Separator/>
+        <div>
+            <Skeleton className="h-4 w-20 mb-2" />
+            <div className="flex flex-col gap-2">
+                {[...Array(2)].map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="flex flex-col gap-1">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-3 w-16" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
+)
+
+
 export function UserList() {
+    const [users, setUsers] = useState<AppUser[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const q = query(collection(db, "users"));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            const usersData: AppUser[] = [];
+            snapshot.forEach(doc => {
+                usersData.push({ id: doc.id, ...doc.data() } as AppUser);
+            });
+            setUsers(usersData);
+            setIsLoading(false);
+        }, (error) => {
+            console.error("Error fetching users: ", error);
+            setIsLoading(false);
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const onlineUsers = users.filter(u => u.status !== "Offline");
+    const offlineUsers = users.filter(u => u.status === "Offline");
+
   return (
     <aside className="hidden md:flex flex-col w-72 m-2 mr-0">
       <Card className="flex-1 flex flex-col rounded-lg shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>User Status</CardTitle>
-          <CreateGroupDialog users={allUsers} />
+          <CreateGroupDialog users={users} />
         </CardHeader>
         <CardContent className="flex flex-col gap-4 overflow-y-auto">
-          
-          <Separator />
+          {isLoading ? <UserListSkeleton /> : (
+            <>
+                <Separator />
+                <div>
+                    <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Online — {onlineUsers.length}</h3>
+                    <div className="flex flex-col gap-1 px-4">
+                    {onlineUsers.map((user) => (
+                        <User key={user.id} {...user} isOnline />
+                    ))}
+                    </div>
+                </div>
 
-          <div>
-            <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Online — {onlineUsers.length}</h3>
-            <div className="flex flex-col gap-1 px-4">
-              {onlineUsers.map((user) => (
-                <User key={user.name} {...user} isOnline />
-              ))}
-            </div>
-          </div>
+                <Separator />
 
-          <Separator />
-
-          <div>
-            <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Offline — {offlineUsers.length}</h3>
-            <div className="flex flex-col gap-1 px-4">
-              {offlineUsers.map((user) => (
-                <User key={user.name} {...user} isOnline={false} />
-              ))}
-            </div>
-          </div>
+                <div>
+                    <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Offline — {offlineUsers.length}</h3>
+                    <div className="flex flex-col gap-1 px-4">
+                    {offlineUsers.map((user) => (
+                        <User key={user.id} {...user} isOnline={false} />
+                    ))}
+                    </div>
+                </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </aside>

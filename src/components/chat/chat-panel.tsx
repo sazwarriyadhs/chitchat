@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from "react";
-import { Send, Paperclip, Phone, Video, Loader2 } from "lucide-react";
+import { Send, Paperclip, Phone, Video, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
