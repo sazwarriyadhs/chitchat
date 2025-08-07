@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -77,10 +78,21 @@ export default {
             height: '0',
           },
         },
+        'splash-pop-in': {
+          '0%': { opacity: '0', transform: 'scale(0.8)' },
+          '50%': { opacity: '1', transform: 'scale(1)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'fade-out': {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0', visibility: 'hidden' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'splash-pop-in': 'splash-pop-in 1.5s ease-in-out forwards',
+        'fade-out': 'fade-out 0.5s ease-out',
       },
     },
   },
