@@ -8,7 +8,7 @@ export function Header() {
     <header>
       <Card className="flex items-center justify-between p-2 m-2 border-b rounded-lg shadow-sm">
         <div className="flex items-center gap-2">
-          <Image src="/image/logo.png" alt="ChitChat Logo" width={32} height={32} />
+          <Image src="/image/logo.png" alt="ChitChat Logo" width={128} height={128} />
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
