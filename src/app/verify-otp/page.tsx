@@ -38,14 +38,19 @@ function VerifyOtpComponent() {
         });
         router.push('/');
       } else {
-        throw new Error('Konfirmasi tidak ditemukan. Silakan coba lagi dari halaman login.');
+        throw new Error('Sesi verifikasi tidak ditemukan. Silakan coba lagi dari halaman login.');
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
+      let description = 'Kode OTP salah atau sesi telah kedaluwarsa. Silakan coba lagi.';
+      if (error instanceof Error && error.message.includes('Sesi verifikasi')) {
+        description = error.message;
+      }
+      
       toast({
         variant: 'destructive',
         title: 'Verifikasi Gagal',
-        description: 'Kode OTP salah. Silakan coba lagi.',
+        description: description,
       });
     } finally {
       setIsLoading(false);

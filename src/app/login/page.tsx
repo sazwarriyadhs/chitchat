@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   signInWithPopup,
@@ -31,6 +31,24 @@ export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (!window.recaptchaVerifier) {
+      // Important: RecaptchaVerifier must be rendered in a visible container.
+      // The 'recaptcha-container' div is used for this purpose.
+      const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible',
+        'callback': (response: any) => {
+          // reCAPTCHA solved, allow signInWithPhoneNumber.
+        },
+        'expired-callback': () => {
+          // Response expired. Ask user to solve reCAPTCHA again.
+        }
+      });
+      window.recaptchaVerifier = recaptchaVerifier;
+    }
+  }, []);
+
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
@@ -67,16 +85,15 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Format nomor telepon ke format E.164 jika perlu (contoh: +6281234567890)
       const formattedPhoneNumber = phoneNumber.startsWith('+')
         ? phoneNumber
         : `+62${phoneNumber.replace(/^0/, '')}`;
       
-      const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible',
-      });
+      const recaptchaVerifier = window.recaptchaVerifier;
+      if (!recaptchaVerifier) {
+          throw new Error("reCAPTCHA verifier not initialized.");
+      }
 
-      window.recaptchaVerifier = recaptchaVerifier;
       const confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, recaptchaVerifier);
       window.confirmationResult = confirmationResult;
       
@@ -142,10 +159,10 @@ export default function LoginPage() {
               Masuk dengan Nomor Telepon
             </Button>
           </div>
-
-          <div id="recaptcha-container"></div>
         </CardContent>
       </Card>
+      {/* This container is used by RecaptchaVerifier and must be visible. */}
+      <div id="recaptcha-container" className="fixed bottom-0"></div>
     </div>
   );
 }
