@@ -1,7 +1,10 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from '@/components/auth-provider';
+import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'ChitChat',
@@ -27,7 +30,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <Suspense fallback={<div>Loading...</div>}>
+            <AuthProvider>
+                {children}
+            </AuthProvider>
+          </Suspense>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -1,7 +1,7 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
 import { CreateGroupDialog } from "./create-group-dialog"
 
 const onlineUsers = [
@@ -40,35 +40,37 @@ const User = ({ name, avatar, isOnline, status }: { name: string; avatar: string
 
 export function UserList() {
   return (
-    <Card className="hidden md:flex flex-col w-72 m-2 mr-0 rounded-lg shadow-sm">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>User Status</CardTitle>
-        <CreateGroupDialog users={allUsers} />
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4 overflow-y-auto">
-        
-        <Separator />
+    <aside className="hidden md:flex flex-col w-72 m-2 mr-0">
+      <Card className="flex-1 flex flex-col rounded-lg shadow-sm">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>User Status</CardTitle>
+          <CreateGroupDialog users={allUsers} />
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 overflow-y-auto">
+          
+          <Separator />
 
-        <div>
-          <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Online — {onlineUsers.length}</h3>
-          <div className="flex flex-col gap-1 px-4">
-            {onlineUsers.map((user) => (
-              <User key={user.name} {...user} isOnline />
-            ))}
+          <div>
+            <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Online — {onlineUsers.length}</h3>
+            <div className="flex flex-col gap-1 px-4">
+              {onlineUsers.map((user) => (
+                <User key={user.name} {...user} isOnline />
+              ))}
+            </div>
           </div>
-        </div>
 
-        <Separator />
+          <Separator />
 
-        <div>
-          <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Offline — {offlineUsers.length}</h3>
-          <div className="flex flex-col gap-1 px-4">
-            {offlineUsers.map((user) => (
-              <User key={user.name} {...user} isOnline={false} />
-            ))}
+          <div>
+            <h3 className="mb-2 px-6 text-sm font-semibold text-muted-foreground">Offline — {offlineUsers.length}</h3>
+            <div className="flex flex-col gap-1 px-4">
+              {offlineUsers.map((user) => (
+                <User key={user.name} {...user} isOnline={false} />
+              ))}
+            </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </aside>
   )
 }

@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useRef, useEffect, type FormEvent, type ChangeEvent } from "react";
-import { Send, Sparkles, Paperclip, Phone, Video, File as FileIcon } from "lucide-react";
+import { Send, Paperclip, Phone, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,6 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAuth } from "../auth-provider";
 
 
 const initialMessages: Message[] = [
@@ -56,6 +58,7 @@ const initialMessages: Message[] = [
 ];
 
 export function ChatPanel() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -84,17 +87,16 @@ export function ChatPanel() {
         return;
       }
       setSelectedFile(file);
-      // Prepend file name to input or handle it differently
       setInput(prev => `[File: ${file.name}] ${prev}`);
     }
   };
 
   const handleSendMessage = (text: string, file?: File | null) => {
-    if (text.trim() || file) {
+    if ((text.trim() || file) && user) {
       const newMessage: Message = {
         id: (messages.length + 1).toString(),
         author: "You",
-        avatar: "https://placehold.co/40x40.png",
+        avatar: user.photoURL || "https://placehold.co/40x40.png",
         text: text,
         timestamp: new Date(),
         file: file ? { name: file.name, size: file.size } : undefined
@@ -121,72 +123,74 @@ export function ChatPanel() {
   }
 
   return (
-    <Card className="flex flex-col flex-1 m-2 rounded-lg shadow-sm">
-      <div className="p-4 border-b flex justify-between items-center bg-card">
-        <div className="flex items-center gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => handleCall('video')}>
-                    <Video className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Start Video Call</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" onClick={() => handleCall('audio')}>
-                    <Phone className="w-5 h-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Start Audio Call</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-        </div>
-        <SummarizeButton messages={messages} />
-      </div>
-
-      <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
-        <div className="flex flex-col gap-4">
-          {messages.map((msg) => (
-            <ChatMessage key={msg.id} message={msg} />
-          ))}
-        </div>
-      </ScrollArea>
-
-      <div className="p-4 border-t">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
-           <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
-                        <Paperclip className="w-5 h-5" />
+    <main className="flex flex-col flex-1 m-2 rounded-lg">
+      <Card className="flex-1 flex flex-col shadow-sm">
+        <div className="p-4 border-b flex justify-between items-center bg-card">
+          <div className="flex items-center gap-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => handleCall('video')}>
+                      <Video className="w-5 h-5" />
                     </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Attach File (Max 10MB)</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1"
-            autoComplete="off"
-          />
-          <Button type="submit" size="icon" aria-label="Send message">
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
-      </div>
-    </Card>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Start Video Call</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={() => handleCall('audio')}>
+                      <Phone className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Start Audio Call</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+          </div>
+          <SummarizeButton messages={messages} />
+        </div>
+
+        <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+          <div className="flex flex-col gap-4">
+            {messages.map((msg) => (
+              <ChatMessage key={msg.id} message={msg} />
+            ))}
+          </div>
+        </ScrollArea>
+
+        <div className="p-4 border-t">
+          <form onSubmit={handleSubmit} className="flex items-center gap-2">
+            <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                      <Button type="button" variant="ghost" size="icon" onClick={() => fileInputRef.current?.click()}>
+                          <Paperclip className="w-5 h-5" />
+                      </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Attach File (Max 10MB)</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1"
+              autoComplete="off"
+            />
+            <Button type="submit" size="icon" aria-label="Send message">
+              <Send className="w-4 h-4" />
+            </Button>
+          </form>
+        </div>
+      </Card>
+    </main>
   );
 }

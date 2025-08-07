@@ -11,6 +11,20 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel"
 import { StoryViewer } from "./story-viewer";
+import { useAuth } from "../auth-provider";
+import { auth } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import { Button } from "../ui/button";
+import { LogOut } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export interface Story {
   id: number;
@@ -32,11 +46,33 @@ const stories: Story[] = [
 
 
 export function Header() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+      toast({
+        title: "Logout Berhasil",
+        description: "Anda telah keluar dari akun Anda.",
+      });
+      router.push('/login');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Logout Gagal",
+        description: "Terjadi kesalahan saat mencoba keluar.",
+      });
+    }
+  };
+
+
   return (
-    <header>
-      <Card className="flex items-center justify-between p-2 m-2 border-b rounded-lg shadow-sm bg-card">
+    <header className="bg-card/80 backdrop-blur-sm sticky top-0 z-40">
+      <Card className="flex items-center justify-between p-2 m-2 border-b rounded-lg shadow-sm bg-transparent border-0">
         <div className="flex items-center gap-2">
-          <Image src="/image/logo.png" alt="ChitChat Logo" width={128} height={128} className="w-32 h-auto" />
+          <Image src="/image/logo.png" alt="ChitChat Logo" width={160} height={160} className="w-40 h-auto" />
         </div>
         
         <div className="flex-1 flex justify-center px-4">
@@ -73,13 +109,26 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Avatar className="w-8 h-8">
-              <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="avatar" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            <span className="font-medium text-foreground">You</span>
-          </div>
+          <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <Avatar className="w-8 h-8">
+                    <AvatarImage src={user?.photoURL || "https://placehold.co/40x40.png"} alt="User Avatar" data-ai-hint="avatar" />
+                    <AvatarFallback>{user?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <span className="font-medium text-foreground hidden sm:inline">{user?.displayName || user?.phoneNumber || "User"}</span>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Akun Saya</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-red-500">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
           <ThemeToggle />
         </div>
       </Card>
