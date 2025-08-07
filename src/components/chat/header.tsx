@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/theme-toggle"
 export function Header() {
   return (
     <header>
-      <Card className="flex items-center justify-between p-2 m-2 border-b rounded-lg shadow-sm">
+      <Card className="flex items-center justify-between p-2 m-2 border-b rounded-lg shadow-sm bg-background">
         <div className="flex items-center gap-2">
           <Image src="/image/logo.png" alt="ChitChat Logo" width={128} height={128} />
         </div>
