@@ -1,0 +1,27 @@
+import { MessageSquare } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card } from "@/components/ui/card"
+import { ThemeToggle } from "@/components/theme-toggle"
+
+export function Header() {
+  return (
+    <header>
+      <Card className="flex items-center justify-between p-2 m-2 border-b rounded-lg shadow-sm">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="w-8 h-8 text-primary" />
+          <h1 className="text-xl font-bold text-foreground font-headline">ChitChat</h1>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Avatar className="w-8 h-8">
+              <AvatarImage src="https://placehold.co/40x40.png" alt="User Avatar" data-ai-hint="avatar" />
+              <AvatarFallback>U</AvatarFallback>
+            </Avatar>
+            <span className="font-medium text-foreground">You</span>
+          </div>
+          <ThemeToggle />
+        </div>
+      </Card>
+    </header>
+  )
+}
