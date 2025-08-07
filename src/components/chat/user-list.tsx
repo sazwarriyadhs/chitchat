@@ -2,19 +2,22 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
+import { CreateGroupDialog } from "./create-group-dialog"
 
 const onlineUsers = [
-  { name: "Alice", avatar: "https://placehold.co/40x40/F4B400/000000.png", status: "Online" },
-  { name: "Bob", avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png", status: "In a meeting" },
-  { name: "Charlie", avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png", status: "Away" },
-  { name: "Diana", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", status: "Coding" },
-  { name: "Frank", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", status: "On a call" },
+  { id: "1", name: "Alice", avatar: "https://placehold.co/40x40/F4B400/000000.png", status: "Online" },
+  { id: "2", name: "Bob", avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png", status: "In a meeting" },
+  { id: "3", name: "Charlie", avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png", status: "Away" },
+  { id: "4", name: "Diana", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", status: "Coding" },
+  { id: "5", name: "Frank", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", status: "On a call" },
 ];
 
 const offlineUsers = [
-  { name: "David", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", status: "Offline" },
-  { name: "Eve", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", status: "Offline" },
+  { id: "6", name: "David", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", status: "Offline" },
+  { id: "7", name: "Eve", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", status: "Offline" },
 ];
+
+const allUsers = [...onlineUsers, ...offlineUsers];
 
 const User = ({ name, avatar, isOnline, status }: { name: string; avatar: string; isOnline: boolean; status: string }) => (
   <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
@@ -38,8 +41,9 @@ const User = ({ name, avatar, isOnline, status }: { name: string; avatar: string
 export function UserList() {
   return (
     <Card className="hidden md:flex flex-col w-72 m-2 mr-0 rounded-lg shadow-sm">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>User Status</CardTitle>
+        <CreateGroupDialog users={allUsers} />
       </CardHeader>
       <CardContent className="flex flex-col gap-4 overflow-y-auto">
         
