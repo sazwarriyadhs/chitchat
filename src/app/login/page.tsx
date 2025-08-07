@@ -36,17 +36,19 @@ export default function LoginPage() {
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (authLoading) return; // Wait for auth state to be determined
+    // Wait for auth state to be determined
+    if (authLoading) return;
+    
+    // If user is already logged in, redirect them
     if (user) {
-      router.push('/');
+      router.push('/chat');
       return;
     }
 
+    // Initialize reCAPTCHA only when the user is not logged in and it hasn't been initialized yet
     if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
       try {
-        // Ensure the container is empty before rendering reCAPTCHA
-        recaptchaContainerRef.current.innerHTML = '';
-        const recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
           'callback': () => { /* reCAPTCHA solved */ },
           'expired-callback': () => {
@@ -57,7 +59,10 @@ export default function LoginPage() {
             });
            }
         });
-        window.recaptchaVerifier = recaptchaVerifier;
+        // Render the reCAPTCHA explicitly
+        window.recaptchaVerifier.render().catch((error) => {
+            console.error("reCAPTCHA render error:", error);
+        });
       } catch (error) {
         console.error("Error initializing RecaptchaVerifier", error);
         toast({
@@ -79,13 +84,13 @@ export default function LoginPage() {
         title: 'Login Berhasil',
         description: 'Selamat datang kembali!',
       });
-      router.push('/');
+      router.push('/chat');
     } catch (error) {
       console.error('Error signing in with Google:', error);
       toast({
         variant: 'destructive',
         title: 'Login Gagal',
-        description: 'Terjadi kesalahan saat mencoba masuk dengan Google. Pastikan domain sudah diotorisasi.',
+        description: 'Terjadi kesalahan saat mencoba masuk dengan Google.',
       });
     } finally {
       setIsGoogleLoading(false);
@@ -114,9 +119,6 @@ export default function LoginPage() {
           throw new Error("reCAPTCHA verifier not initialized. Silakan muat ulang halaman.");
       }
       
-      // Render reCAPTCHA before sign-in
-      await recaptchaVerifier.render();
-
       const confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, recaptchaVerifier);
       window.confirmationResult = confirmationResult;
       
@@ -124,9 +126,9 @@ export default function LoginPage() {
 
     } catch (error) {
       console.error('Error sending OTP:', error);
-      let errorMessage = 'Pastikan nomor telepon valid dan coba lagi.';
+      let errorMessage = 'Gagal mengirim OTP. Pastikan nomor telepon valid dan coba lagi.';
       if (error instanceof Error && error.message.includes('reCAPTCHA')) {
-        errorMessage = error.message;
+        errorMessage = 'Terjadi masalah dengan verifikasi reCAPTCHA. Muat ulang halaman dan coba lagi.';
       }
       toast({
         variant: 'destructive',
@@ -138,6 +140,14 @@ export default function LoginPage() {
     }
   };
 
+
+  if (authLoading || user) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
