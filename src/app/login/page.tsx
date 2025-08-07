@@ -44,10 +44,18 @@ export default function LoginPage() {
 
     if (!window.recaptchaVerifier && recaptchaContainerRef.current) {
       try {
+        // Ensure the container is empty before rendering reCAPTCHA
+        recaptchaContainerRef.current.innerHTML = '';
         const recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
           'callback': () => { /* reCAPTCHA solved */ },
-          'expired-callback': () => { /* Response expired */ }
+          'expired-callback': () => {
+             toast({
+                variant: "destructive",
+                title: "reCAPTCHA Expired",
+                description: "Silakan coba lagi.",
+            });
+           }
         });
         window.recaptchaVerifier = recaptchaVerifier;
       } catch (error) {
@@ -103,8 +111,11 @@ export default function LoginPage() {
       
       const recaptchaVerifier = window.recaptchaVerifier;
       if (!recaptchaVerifier) {
-          throw new Error("reCAPTCHA verifier not initialized.");
+          throw new Error("reCAPTCHA verifier not initialized. Silakan muat ulang halaman.");
       }
+      
+      // Render reCAPTCHA before sign-in
+      await recaptchaVerifier.render();
 
       const confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, recaptchaVerifier);
       window.confirmationResult = confirmationResult;
@@ -113,10 +124,14 @@ export default function LoginPage() {
 
     } catch (error) {
       console.error('Error sending OTP:', error);
+      let errorMessage = 'Pastikan nomor telepon valid dan coba lagi.';
+      if (error instanceof Error && error.message.includes('reCAPTCHA')) {
+        errorMessage = error.message;
+      }
       toast({
         variant: 'destructive',
         title: 'Gagal Mengirim OTP',
-        description: 'Pastikan nomor telepon valid dan coba lagi. Mungkin ada masalah dengan reCAPTCHA.',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -173,8 +188,7 @@ export default function LoginPage() {
           </div>
         </CardContent>
       </Card>
-      {/* This container is used by RecaptchaVerifier and must be visible. */}
-      <div ref={recaptchaContainerRef} />
+      <div ref={recaptchaContainerRef}></div>
     </div>
   );
 }
