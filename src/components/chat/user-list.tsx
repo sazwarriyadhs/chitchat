@@ -3,17 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 
 const onlineUsers = [
-  { name: "Alice", avatar: "https://placehold.co/40x40/F4B400/000000.png" },
-  { name: "Bob", avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png" },
-  { name: "Charlie", avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png" },
+  { name: "Alice", avatar: "https://placehold.co/40x40/F4B400/000000.png", status: "Online" },
+  { name: "Bob", avatar: "https://placehold.co/40x40/DB4437/FFFFFF.png", status: "In a meeting" },
+  { name: "Charlie", avatar: "https://placehold.co/40x40/4285F4/FFFFFF.png", status: "Away" },
 ];
 
 const offlineUsers = [
-  { name: "David", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png" },
-  { name: "Eve", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png" },
+  { name: "David", avatar: "https://placehold.co/40x40/0F9D58/FFFFFF.png", status: "Offline" },
+  { name: "Eve", avatar: "https://placehold.co/40x40/7B1FA2/FFFFFF.png", status: "Offline" },
 ];
 
-const User = ({ name, avatar, isOnline }: { name: string; avatar: string; isOnline: boolean }) => (
+const User = ({ name, avatar, isOnline, status }: { name: string; avatar: string; isOnline: boolean; status: string }) => (
   <div className="flex items-center gap-3 p-2 rounded-md hover:bg-muted">
     <div className="relative">
       <Avatar>
@@ -25,7 +25,10 @@ const User = ({ name, avatar, isOnline }: { name: string; avatar: string; isOnli
           }`}
       />
     </div>
-    <span className="font-medium">{name}</span>
+    <div className="flex flex-col">
+      <span className="font-medium">{name}</span>
+      <span className="text-xs text-muted-foreground">{status}</span>
+    </div>
   </div>
 );
 
