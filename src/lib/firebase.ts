@@ -6,12 +6,13 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDg3TCsZWax_zKQ2xZx0xTfFEEPMMuxYDk",
-  authDomain: "chitchat-60c02.firebaseapp.com",
-  projectId: "chitchat-60c02",
-  storageBucket: "chitchat-60c02.appspot.com",
-  messagingSenderId: "878752001360",
-  appId: "1:878752001360:web:968f2c525381f185b3b0c5"
+    apiKey: "AIzaSyDg3TCsZWax_zKQ2xZx0xTfFEEPMMuxYDk",
+    authDomain: "chitchat-60c02.firebaseapp.com",
+    projectId: "chitchat-60c02",
+    storageBucket: "chitchat-60c02.firebasestorage.app",
+    messagingSenderId: "878752001360",
+    appId: "1:878752001360:web:73d301596fc6c0c81f1055",
+    measurementId: "G-EY6BT580TV"
 };
 
 // Initialize Firebase
