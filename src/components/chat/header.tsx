@@ -1,4 +1,4 @@
-import { MessageSquare } from "lucide-react"
+import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -8,8 +8,7 @@ export function Header() {
     <header>
       <Card className="flex items-center justify-between p-2 m-2 border-b rounded-lg shadow-sm">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-8 h-8 text-primary" />
-          <h1 className="text-xl font-bold text-foreground font-headline">ChitChat</h1>
+          <Image src="/image/logo.png" alt="ChitChat Logo" width={32} height={32} />
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
